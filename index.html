@@ -1,15 +1,520 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theodora Sampalou</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Theodora Sampalou, software engineer. Warehouse systems, PL/SQL, C++, Linux.">
+<title>Theodora Sampalou</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one left-aligned column over a fixed night-sky canvas that drifts, links nearby stars and reacts to the pointer. Work history is a vertical timeline that fills as you scroll. */
+:root {
+  --bg: #0a0f17;
+  --surface: #111826;
+  --line: #1f2a3b;
+  --fg: #e8edf5;
+  --muted: #93a1b7;
+  --accent: #3cc9c0;
+  --accent-ink: #04211f;
+  --star: #cfe3ff;
+  --font-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f6fa; --surface: #ffffff; --line: #d9e0ea; --fg: #0e1726; --muted: #4f5d74;
+    --accent: #0b7a74; --accent-ink: #ffffff; --star: #28405f; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f4f6fa; --surface: #ffffff; --line: #d9e0ea; --fg: #0e1726; --muted: #4f5d74;
+  --accent: #0b7a74; --accent-ink: #ffffff; --star: #28405f; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 16px/1.6 var(--font-body);
+  padding-block: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.wrap { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.eyebrow, .mono { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* Hero */
+.hero { padding-block: 72px 48px; }
+.hero > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+.hero > :nth-child(2) { animation-delay: .06s; }
+.hero > :nth-child(3) { animation-delay: .12s; }
+.hero > :nth-child(4) { animation-delay: .18s; }
+.hero > :nth-child(5) { animation-delay: .24s; }
+.hero > :nth-child(6) { animation-delay: .30s; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.hero h1 {
+  font: 700 clamp(48px, 13vw, 104px)/.95 var(--font-display);
+  letter-spacing: -.03em;
+  margin: 20px 0 24px;
+  text-wrap: balance;
+}
+.hero h1 span { color: var(--accent); }
+.hero .role { font: 500 clamp(18px, 3.4vw, 24px)/1.3 var(--font-display); margin: 0 0 16px; }
+.status {
+  display: inline-flex; align-items: center; gap: 10px; margin: 0 0 20px;
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); font: 500 13px/1.3 var(--font-body);
+}
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; animation: pulse 2.4s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--accent); } 70%, 100% { box-shadow: 0 0 0 9px transparent; } }
+.hero .bio { max-width: 58ch; color: var(--muted); margin: 0 0 32px; font-size: 17px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  padding: 10px 18px; border-radius: 8px; font: 600 15px/1 var(--font-body);
+  text-decoration: none; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+/* Skills ticker */
+.ticker { overflow: hidden; border-block: 1px solid var(--line); padding-block: 14px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.track { display: flex; width: max-content; animation: slide 46s linear infinite; }
+.ticker:hover .track { animation-play-state: paused; }
+.track span { font: 500 13px/1 var(--font-mono); color: var(--muted); padding-inline: 18px; white-space: nowrap; position: relative; }
+.track span::after { content: ""; position: absolute; right: -2px; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: var(--accent); }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* Sections */
+section { padding-block: 56px 8px; }
+h2 { font: 600 clamp(26px, 5vw, 34px)/1.1 var(--font-display); letter-spacing: -.02em; margin: 0 0 28px; }
+
+/* Timeline */
+.jobs { list-style: none; margin: 0; padding: 0 0 0 30px; position: relative; display: grid; gap: 36px; }
+.jobs::before, .rail-fill { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: var(--line); border-radius: 2px; }
+.rail-fill { bottom: auto; height: 0; background: var(--accent); transition: height .12s linear; }
+.job { position: relative; display: grid; gap: 6px; }
+.job::before {
+  content: ""; position: absolute; left: -30px; top: 5px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--line); transition: border-color .3s ease, background .3s ease, transform .3s ease;
+}
+.job.on::before { border-color: var(--accent); background: var(--accent); transform: scale(1.15); }
+.job .when { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); letter-spacing: .04em; }
+.job h3 { font: 600 20px/1.25 var(--font-display); margin: 0; }
+.job .org { color: var(--muted); font-size: 15px; margin: 0 0 6px; }
+.job ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; max-width: 64ch; }
+.job li::marker { color: var(--accent); }
+@media (min-width: 680px) {
+  .job { grid-template-columns: 180px minmax(0, 1fr); column-gap: 28px; }
+  .job .when { padding-top: 5px; }
+}
+
+/* Projects */
+.projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; transition: transform .2s ease, border-color .2s ease; }
+.card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.card h3 { font: 600 18px/1.25 var(--font-display); margin: 0; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card .meta { margin-top: auto; padding-top: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.tags li { font: 500 11.5px/1 var(--font-mono); padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); }
+.thesis { margin-top: 16px; }
+.repo { display: inline-block; margin-top: 12px; font: 600 14px/1.3 var(--font-body); color: var(--accent); text-underline-offset: 4px; }.more { margin: 20px 0 0; }
+.more a { color: var(--accent); font-weight: 600; text-underline-offset: 4px; }
+
+/* Skills */
+.skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 28px; }
+.skills h3 { margin: 0 0 10px; }
+.skills p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+.skills p b { color: var(--fg); font-weight: 600; }
+.langs { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 15px; }
+.langs li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+.langs span { color: var(--muted); font-family: var(--font-mono); font-size: 12.5px; text-align: right; }
+
+/* Education + interests */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 32px; }
+.two h3 { font: 600 18px/1.3 var(--font-display); margin: 0 0 4px; }
+.two p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+
+/* Education */
+.degree { margin: -6px 0 18px; text-transform: none; font-size: 13px; }
+.edu { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: clamp(20px, 4vw, 32px); }
+.edu .when { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); letter-spacing: .04em; }
+.edu h3 { font: 700 clamp(24px, 5vw, 32px)/1.15 var(--font-display); letter-spacing: -.02em; margin: 6px 0 4px; }
+.edu .org { color: var(--muted); margin: 0 0 22px; }
+.facts { margin: 0; display: grid; gap: 16px; }
+.facts div { display: grid; gap: 4px; border-top: 1px dashed var(--line); padding-top: 14px; }
+.facts dt { font: 500 12px/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; max-width: 68ch; }
+@media (min-width: 680px) {
+  .facts div { grid-template-columns: 180px minmax(0, 1fr); column-gap: 28px; }
+}
+
+/* Contact */
+.contact-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.email { font: 500 16px var(--font-mono); padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); user-select: all; overflow-wrap: anywhere; }
+.note { color: var(--muted); font-size: 14px; min-height: 22px; margin: 10px 0 0; }
+
+footer { margin-top: 48px; padding-block: 28px 36px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero > *, .track, .status i { animation: none; }
+  .btn, .card, .job::before, .rail-fill { transition: none; }
+}
+</style>
+
+<style>html{color-scheme:dark light}body{margin:0}</style>
 </head>
 <body>
-    <div>
-        My name is Theodora Sampalou
-    </div>
+<canvas id="sky" aria-hidden="true"></canvas>
 
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Athens, Greece &middot; 37.98&deg; N 23.73&deg; E</div>
+    <h1>Theodora <span>Sampalou</span></h1>
+    <p class="role">Software engineer</p>
+    <p class="mono degree">BSc Computer Science &middot; University of Crete</p>
+    <p class="status"><i></i>Open to jobs worldwide &middot; Australian passport holder</p>
+    <p class="bio">I want to build software that people depend on, and I'm looking for a team anywhere in the world where I can take on bigger problems. I already commission warehouse systems for real customers in PL/SQL, C++ and Linux, and I own the whole job: writing the code, deploying it, training the people who use it and documenting it. Machine learning research, web development and mentoring have taught me to move between stacks and explain things clearly. I'm open-minded, I work ethically, and I speak Greek, English and French.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://www.linkedin.com/in/theodora-sampalou/" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://github.com/theodorasab" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="#contact">Get in touch</a>
+    </div>
+  </header>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="track" id="track"></div>
+  </div>
+
+  <section id="experience">
+    <h2>Experience</h2>
+    <ol class="jobs" id="jobs">
+      <span class="rail-fill" id="fill"></span>
+      <li class="job">
+        <div class="when">Oct 2023 &ndash; Present</div>
+        <div>
+          <h3>Software Commissioning Engineer</h3>
+          <p class="org">LAS Solutions</p>
+          <ul>
+            <li>Develop warehouse systems in PL/SQL and C++, then test and deploy them in Linux environments.</li>
+            <li>Configure and maintain networks and servers.</li>
+            <li>Train customers on using the system.</li>
+            <li>Write technical documentation and report on system performance.</li>
+          </ul>
+        </div>
+      </li>
+      <li class="job">
+        <div class="when">Jun &ndash; Oct 2022</div>
+        <div>
+          <h3>Web Developer, intern</h3>
+          <p class="org">BrikkApp</p>
+          <ul>
+            <li>Scraped data with JavaScript and jQuery.</li>
+            <li>Built front-end pages with HTML, CSS and Laravel.</li>
+            <li>Designed UX/UI in Moqups and ran user testing.</li>
+            <li>Automated and integrated team tools such as Jira and Calendly-Mailchimp.</li>
+          </ul>
+        </div>
+      </li>
+      <li class="job">
+        <div class="when">Jun &ndash; Oct 2022</div>
+        <div>
+          <h3>Mentor, intern</h3>
+          <p class="org">Data4You &middot; Coding Bootcamp Praha</p>
+          <ul>
+            <li>Mentored students in HTML, CSS, JavaScript, PHP and ReactJS.</li>
+            <li>Created exercises for students and helped run events.</li>
+          </ul>
+        </div>
+      </li>
+      <li class="job">
+        <div class="when">Oct 2021 &ndash; Jun 2022</div>
+        <div>
+          <h3>Data Scientist, undergraduate scholarship</h3>
+          <p class="org">ICS-FORTH</p>
+          <ul>
+            <li>Implemented statistical metrics and algorithms from research papers.</li>
+            <li>Built predictive models with machine learning in Python (pandas, NumPy, scikit-learn, SciPy) and R.</li>
+          </ul>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="education">
+    <h2>Education</h2>
+    <article class="edu">
+      <div class="when">2018 &ndash; 2023</div>
+      <h3>BSc in Computer Science</h3>
+      <p class="org">Computer Science Department, University of Crete</p>
+      <dl class="facts">
+        <div><dt>Thesis</dt><dd>Analysis of the functional network connectivity of the visual cortex of mice under spontaneous conditions, in Python (pandas, NumPy, scikit-learn, SciPy) and R.</dd></div>
+        <div><dt>Courses</dt><dd>AI in Python. Networking with C, MATLAB and Wireshark.</dd></div>
+        <div><dt>Languages learned</dt><dd>Prolog, C, MATLAB, Python</dd></div>
+      </dl>
+    </article>
+  </section>
+
+  <section id="projects">
+    <h2>Selected projects</h2>
+    <div class="projects">
+      <article class="card">
+        <h3>Alpha Compiler</h3>
+        <p>A complete compiler and virtual machine for the Alpha language, written in a team of three. Handles tokens, errors, comments, loops, functions and garbage collection.</p>
+        <div class="meta">
+          <ul class="tags"><li>C</li><li>C++</li><li>flex</li><li>bison</li><li>Git</li></ul>
+          <a class="repo" href="https://github.com/theodorasab/Alpha-Compiler" target="_blank" rel="noopener">Code on GitHub</a>
+        </div>
+      </article>
+      <article class="card">
+        <h3>Emergency Room system</h3>
+        <p>A web application for a hospital ER that creates a database and stores and retrieves patient information.</p>
+        <div class="meta">
+          <ul class="tags"><li>Java</li><li>MySQL</li><li>jQuery</li><li>Apache</li></ul>
+          <a class="repo" href="https://github.com/theodorasab" target="_blank" rel="noopener">Code on GitHub</a>
+        </div>
+      </article>
+      <article class="card">
+        <h3>Airline Management System</h3>
+        <p>Manages airplanes, flights and priority customers, built on lists, doubly-linked lists, binary trees, queues and stacks.</p>
+        <div class="meta">
+          <ul class="tags"><li>Java</li><li>Data structures</li></ul>
+          <a class="repo" href="https://github.com/theodorasab/Airlines" target="_blank" rel="noopener">Code on GitHub</a>
+        </div>
+      </article>
+      <article class="card">
+        <h3>Social Platform</h3>
+        <p>A social network with registration, login, profiles, posts, comments and post ratings, built in a team of two. Hardened against XSS attacks.</p>
+        <div class="meta">
+          <ul class="tags"><li>Java</li><li>JSP</li><li>REST APIs</li><li>SQL</li></ul>
+          <a class="repo" href="https://github.com/theodorasab" target="_blank" rel="noopener">Code on GitHub</a>
+        </div>
+      </article>
+    </div>
+    <article class="card thesis">
+      <h3>Thesis: visual cortex networks</h3>
+      <p>Analysis of the functional network connectivity of the visual cortex of mice under spontaneous conditions.</p>
+      <div class="meta">
+        <ul class="tags"><li>Python</li><li>pandas</li><li>NumPy</li><li>scikit-learn</li><li>SciPy</li><li>R</li></ul>
+      </div>
+    </article>
+    <p class="more">Code for these projects is on <a href="https://github.com/theodorasab" target="_blank" rel="noopener">github.com/theodorasab</a>.</p>
+  </section>
+
+  <section id="skills">
+    <h2>Skills</h2>
+    <div class="skills">
+      <div>
+        <h3 class="eyebrow">Programming</h3>
+        <p><b>Familiar:</b> Python, C, C++, Java, Java Swing, JavaScript, PHP, HTML, CSS, SQL</p>
+        <p><b>Basic:</b> Prolog, MATLAB, ReactJS, Laravel</p>
+      </div>
+      <div>
+        <h3 class="eyebrow">Tools</h3>
+        <p>Linux, Git, Databases, REST APIs, Postman, Wireshark, Unity, WordPress, Jira, Moqups, Figma, Canva, Lightroom, DaVinci Resolve, Google Workspace, MS Office</p>
+      </div>
+      <div>
+        <h3 class="eyebrow">Spoken languages</h3>
+        <ul class="langs">
+          <li>Greek <span>Native</span></li>
+          <li>English <span>Fluent &middot; IELTS 7.5 (C1)</span></li>
+          <li>French <span>Intermediate &middot; B2</span></li>
+          <li>Spanish <span>Learning</span></li>
+          <li>German <span>Learning</span></li>
+          <li>Portuguese <span>Learning</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <h2>Beyond code</h2>
+    <div class="two">
+      <div>
+        <h3>Travel</h3>
+        <p>I have travelled around the world, both for tourism and for work. I usually go by myself, and I settle into new places, people and routines easily.</p>
+        <h3>Volunteering and human rights</h3>
+        <p>I love volunteering, and human rights matter a lot to me.</p>
+      </div>
+      <div>
+        <h3>Astronomy</h3>
+        <p>I was an active member of the Student Astronomy Group at the University of Crete. I practice astrophotography and edit in Lightroom.</p>
+        <h3>Theater</h3>
+        <p>I was a member of the University of Crete drama club and of an independent drama club.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <div class="contact-row">
+      <span class="email" id="email">theodorasabalou@gmail.com</span>
+      <button class="btn" id="copy" type="button">Copy email</button>
+      <a class="btn primary" href="https://www.linkedin.com/in/theodora-sampalou/" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://github.com/theodorasab" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <p class="note" id="note" role="status"></p>
+  </section>
+
+  <footer class="mono">
+    <span>&copy; 2026 Theodora Sampalou</span>
+    <span>Observing from Athens, 37.98&deg; N</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* Skills ticker: two identical halves so the loop is seamless */
+  var items = ['Python', 'C++', 'PL/SQL', 'Linux', 'Java', 'JavaScript', 'SQL', 'Git', 'C', 'PHP', 'R', 'Laravel', 'REST APIs', 'Wireshark', 'Figma'];
+  var track = document.getElementById('track');
+  var html = items.map(function (t) { return '<span>' + t + '</span>'; }).join('');
+  track.innerHTML = html + html;
+
+  /* Interactive sky */
+  var canvas = document.getElementById('sky');
+  var ctx = canvas.getContext('2d');
+  var W = 0, H = 0, dpr = 1, stars = [], frame = 0;
+  var starColor = '#cfe3ff', accentColor = '#3cc9c0';
+  var ptr = { x: -9999, y: -9999, on: false };
+  var seed = 20260713;
+  function rnd() { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
+
+  function readColors() {
+    var cs = getComputedStyle(document.documentElement);
+    starColor = cs.getPropertyValue('--star').trim() || starColor;
+    accentColor = cs.getPropertyValue('--accent').trim() || accentColor;
+  }
+  function init() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var n = Math.min(150, Math.max(40, Math.round(W * H / 9000)));
+    stars = [];
+    seed = 20260713;
+    for (var i = 0; i < n; i++) {
+      stars.push({
+        x: rnd() * W, y: rnd() * H, z: 0.2 + rnd() * 0.8,
+        r: rnd() < 0.12 ? 1.6 : 0.9, a: 0.25 + rnd() * 0.5, ph: rnd() * 6.28,
+        vx: (rnd() - 0.5) * 0.16, vy: (rnd() - 0.5) * 0.16
+      });
+    }
+    readColors();
+    draw(0);
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    var sy = window.scrollY || 0;
+    var pts = [];
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      if (!reduced) {
+        s.x += s.vx; s.y += s.vy;
+        if (s.x < -10) s.x = W + 10; else if (s.x > W + 10) s.x = -10;
+        if (s.y < -10) s.y = H + 10; else if (s.y > H + 10) s.y = -10;
+        if (ptr.on) {
+          var dx = s.x - ptr.x, dy = s.y - ptr.y, d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 130 && d > 0.1) { var f = (130 - d) * 0.025; s.x += dx / d * f; s.y += dy / d * f; }
+        }
+      }
+      var yy = (((s.y - sy * 0.12 * s.z) % H) + H) % H;
+      pts.push({ x: s.x, y: yy, s: s });
+    }
+    ctx.fillStyle = starColor; ctx.strokeStyle = starColor; ctx.lineWidth = 0.6;
+    for (var a = 0; a < pts.length; a++) {
+      var p = pts[a];
+      ctx.globalAlpha = p.s.a * (reduced ? 1 : (0.65 + 0.35 * Math.sin(t * 0.0018 + p.s.ph)));
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.s.r, 0, 6.2832); ctx.fill();
+      if (reduced) continue;
+      for (var b = a + 1; b < pts.length; b++) {
+        var q = pts[b], lx = p.x - q.x, ly = p.y - q.y, ld = lx * lx + ly * ly;
+        if (ld < 12100) {
+          ctx.globalAlpha = (1 - Math.sqrt(ld) / 110) * 0.2;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+        }
+      }
+    }
+    if (ptr.on && !reduced) {
+      ctx.strokeStyle = accentColor; ctx.fillStyle = accentColor; ctx.lineWidth = 0.8;
+      for (var c = 0; c < pts.length; c++) {
+        var m = pts[c], mx = m.x - ptr.x, my = m.y - ptr.y, md = Math.sqrt(mx * mx + my * my);
+        if (md < 150) {
+          ctx.globalAlpha = (1 - md / 150) * 0.55;
+          ctx.beginPath(); ctx.moveTo(ptr.x, ptr.y); ctx.lineTo(m.x, m.y); ctx.stroke();
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.s.r + 0.6, 0, 6.2832); ctx.fill();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function loop(t) {
+    frame++;
+    if (frame % 45 === 0) readColors();
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+  init();
+  if (!reduced) requestAnimationFrame(loop);
+  window.addEventListener('resize', init);
+  window.addEventListener('pointermove', function (e) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; }, { passive: true });
+  window.addEventListener('pointerdown', function (e) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; }, { passive: true });
+  window.addEventListener('pointerup', function (e) { if (e.pointerType === 'touch') ptr.on = false; }, { passive: true });
+  window.addEventListener('pointerleave', function () { ptr.on = false; });
+  document.addEventListener('mouseleave', function () { ptr.on = false; });
+  if (reduced) window.addEventListener('scroll', function () { draw(0); }, { passive: true });
+
+  /* Timeline progress */
+  var jobsEl = document.getElementById('jobs');
+  var fill = document.getElementById('fill');
+  var jobEls = Array.prototype.slice.call(jobsEl.querySelectorAll('.job'));
+  function timeline() {
+    var vh = window.innerHeight, r = jobsEl.getBoundingClientRect();
+    var p = Math.max(0, Math.min(1, (vh * 0.65 - r.top) / r.height));
+    fill.style.height = Math.max(0, (r.height - 16)) * p + 'px';
+    jobEls.forEach(function (el) {
+      var top = el.getBoundingClientRect().top;
+      el.classList.toggle('on', top < vh * 0.7);
+    });
+  }
+  timeline();
+  window.addEventListener('scroll', timeline, { passive: true });
+  window.addEventListener('resize', timeline);
+
+  /* Copy email */
+  var btn = document.getElementById('copy');
+  var note = document.getElementById('note');
+  var emailEl = document.getElementById('email');
+  function selectEmail() {
+    var range = document.createRange(); range.selectNodeContents(emailEl);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  }
+  btn.addEventListener('click', function () {
+    var text = emailEl.textContent.trim();
+    var done = function () { note.textContent = 'Email address copied.'; };
+    var fail = function () { selectEmail(); note.textContent = 'Address selected. Copy it with your device.'; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fail);
+      } else { fail(); }
+    } catch (e) { fail(); }
+  });
+})();
+</script>
 </body>
 </html>
